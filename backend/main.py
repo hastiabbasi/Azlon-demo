@@ -25,6 +25,7 @@ app.add_middleware(
 class UserInput(BaseModel):
     user_prompt: str
     test_conditions: str
+    human_feedback: str = None
 
 class PromptsInput(BaseModel):
     generate_code_prompt: str
@@ -62,3 +63,31 @@ async def run_workflow(params: UserInput):
         # If engine connection or workflow run fails, a 500 error is raised
         # The global_exception_handler ensures CORS headers are included.
         raise HTTPException(status_code=500, detail="Failed to connect to Restack engine or run workflow.")
+
+@app.post("/human_in_loop")
+async def human_in_loop(params: UserInput):
+    try:
+        workflow_id = f"{int(time.time() * 1000)}-HumanInLoopWorkflow"
+
+        if params.human_feedback:
+            params.user_prompt = apply_human_feedback(params.user_prompt, params.human_feedback)
+
+        runId = await client.schedule_workflow(
+            workflow_name = "HumanInLoopWorkflow",
+            workflow_id = workflow_id,
+            input=params.dict()
+        )
+
+        result = await client.get_workflow_result(workflow_id=workflow_id, run_id=run_id)
+
+        return {"workflow_id": workflow_id, "result": result}
+    
+    except Exception as e:
+
+        raise HTTPException(status_code=500, detail=f"Failed to run the workflow: {str(e)}")
+    
+def apply_human_feedback(user_prompt: str, feedback: str) -> str:
+
+    modified_prompt = f"{user_prompt}\n # Feedback: {feedback}"
+
+    return modified_prompt

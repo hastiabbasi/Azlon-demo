@@ -12,6 +12,7 @@ class GenerateCodeInput {
   preflightResult PreFlightOutput? @description("Output from a previous preflight step")
   testConditions string @description("Test conditions the code must meet")
   validationResult ValidateCodeOutput? @description("Result from previous validation step if this is a retry")
+  humanFeedback string? @description("Feedback provided by the user to improve the generated code")
 }
 
 class GenerateCodeOutput {
@@ -77,6 +78,11 @@ function GenerateCode(input: GenerateCodeInput, systemprompt: string?) -> Genera
     # Previous Validation Results:
     Failure Reason: {{ input.validationResult.reason }}
     {% endif %}
+
+    {% if input.humanFeedback %}
+    # Human Feedback: 
+    {{ input.humanFeedback }}
+    {% endif %}
   "#
 }
 
@@ -96,6 +102,17 @@ test GenerateComplexProject {
     input {
       userPrompt "Create a Flask API with a single endpoint that returns the current time"
       testConditions "API should respond to GET / with current timestamp in ISO format"
+    }
+  }
+}
+
+test GenerateSimpleScriptWithFeedback {
+  functions [GenerateCode]
+  args {
+    input {
+      userPrompt "Create a Python script to generate Fibonacci numbers up to a given limit."
+      testConditions "The script should print the Fibonacci numbers less than or equal to 100."
+      humanFeedback "Change the script to pritn only the even Fibonacci numbers from the sequence."
     }
   }
 }

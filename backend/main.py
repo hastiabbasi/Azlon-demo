@@ -11,6 +11,8 @@ from src.client import client
 from src.prompts import get_prompts, set_prompts
 from restack_ai import Restack # type: ignore
 
+from memory import load_memory, save_memory, update_memory
+
 app = FastAPI()
 
 # CORS configuration
@@ -26,6 +28,8 @@ class UserInput(BaseModel):
     user_prompt: str
     test_conditions: str
     human_feedback: str = None
+    # added workflow_id for human-in-loop processing
+    workflow_id: str = None 
 
 class PromptsInput(BaseModel):
     generate_code_prompt: str
@@ -58,6 +62,8 @@ async def run_workflow(params: UserInput):
             input=params.model_dump()
         )
         result = await client.get_workflow_result(workflow_id=workflow_id, run_id=runId)
+
+        update_memory(workflow_id, user_input=params.user_prompt, output=result)
         return {"workflow_id": workflow_id, "result": result}
     except Exception as e:
         # If engine connection or workflow run fails, a 500 error is raised
@@ -66,25 +72,27 @@ async def run_workflow(params: UserInput):
 
 @app.post("/human_in_loop")
 async def human_in_loop(params: UserInput):
+    
     try:
-        workflow_id = f"{int(time.time() * 1000)}-HumanInLoopWorkflow"
-
+        if not params.worfklow_id:
+            raise HTTPException(status_code=400, detail="Workflow ID required for human-in-loop feedback.")
+        
         if params.human_feedback:
             params.user_prompt = apply_human_feedback(params.user_prompt, params.human_feedback)
 
-        runId = await client.schedule_workflow(
-            workflow_name = "HumanInLoopWorkflow",
-            workflow_id = workflow_id,
-            input=params.dict()
+        runID = await client.continue_workflow(
+            workflow_id = params.workflow_id,
+            input = params.model_dump()
         )
 
-        result = await client.get_workflow_result(workflow_id=workflow_id, run_id=run_id)
+        result = await client.get_workflow_result(workflow_id=params.workflow_id, run_id=runID)
 
-        return {"workflow_id": workflow_id, "result": result}
+        memory_context = update_memory("params.workflow_id, user_input=params.user_prompt, output=rusult")
+
+        return {"workflow_id": params.workflow_id, "result": result}
     
     except Exception as e:
-
-        raise HTTPException(status_code=500, detail=f"Failed to run the workflow: {str(e)}")
+        return {"error": f"Failed to process human-in-the-loop feedback: {str(e)}"}
     
 def apply_human_feedback(user_prompt: str, feedback: str) -> str:
 

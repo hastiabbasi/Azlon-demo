@@ -15,7 +15,7 @@ def save_memory(memory_store):
     with open(MEMORY_FILE, "w") as f:
         json.dump(memory_store, f, indent=4)
 
-def update_memory(workflow_id, new_data):
+def update_memory(workflow_id, user_input=None, output=None):
     memory_store = load_memory()
 
     if workflow_id not in memory_store:
@@ -25,5 +25,7 @@ def update_memory(workflow_id, new_data):
         memory_store[workflow_id]["history"].append({"user": user_input})
     if output:
         memory_store[workflow_id]["history"].append({"output": output})
+
+    save_memory(memory_store)
    
     return memory_store[workflow_id]

@@ -37,6 +37,13 @@ class AutonomousCodingWorkflow:
          4) Copy final code to final_<timestamp>.
         """
         log.info("AutonomousCodingWorkflow started", input=input)
+
+        self.state = WorkflowState(
+            status="running",
+            user_prompt=input.user_prompt,
+            test_conditions=input.test_conditions
+        )
+
         base_output = os.environ.get("LLM_OUTPUT_DIR", "/app/output")
 
         # Make ephemeral workspace
@@ -102,6 +109,13 @@ class AutonomousCodingWorkflow:
             else:
                 log.warning(f"Validation failed. Reason: {val_output.reason}")
                 log.warning(f"Suspected files: {[sf.filename for sf in val_output.suspectedFiles]}")
+
+                self.state.status = "waiting_for_human"
+                self.state.last_successful_step = f"Iteration {iteration} failed validation"
+
+                await workflow.wait_condition(lambda: self.state.status == "resumed")
+
+                log.info("Human intervention complete Resuming workflow...")
 
                 # Include full content for next iteration
                 self._inject_full_content_for_suspected(workspace_path, val_output)
@@ -190,3 +204,16 @@ class AutonomousCodingWorkflow:
             shutil.rmtree(final_dir)
         shutil.copytree(workspace_path, final_dir)
         log.info(f"Final workspace copied to {final_dir}")
+
+@dataclass
+class WorkflowState:
+    status: str
+    user_prompt: str
+    test_conditions: str
+    last_successful_step: str = ""
+    iteration: int = 0
+
+@workflow.signal
+async def resume_workflow(self, new_status: str):
+    if self.state:
+        self.state.status = new_status

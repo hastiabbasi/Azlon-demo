@@ -30,3 +30,16 @@ def run_services():
 
 if __name__ == "__main__":
     run_services()
+
+    # For dev mount containers in docker compose, set restack env variables to local, and uncomment this:
+    # import webbrowser
+    # from pathlib import Path
+
+    # from watchfiles import run_process
+    # def watch_services() -> None:
+    #     watch_path = Path.cwd()
+    #     logging.info("Watching %s and its subdirectories for changes...", watch_path)
+    #     webbrowser.open("http://localhost:5233")
+    #     webbrowser.open("http://localhost:8080")
+    #     run_process(watch_path, recursive=True, target=run_services)
+

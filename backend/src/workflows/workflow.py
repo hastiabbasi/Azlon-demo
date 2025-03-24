@@ -213,7 +213,7 @@ class WorkflowState:
     last_successful_step: str = ""
     iteration: int = 0
 
-@workflow.signal
+@workflow.signal()
 async def resume_workflow(self, new_status: str):
     if self.state:
         self.state.status = new_status

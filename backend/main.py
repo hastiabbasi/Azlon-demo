@@ -11,6 +11,9 @@ from src.prompts import get_prompts, set_prompts
 from restack_ai import Restack
 from restack_ai.restack import CloudConnectionOptions
 
+# import memory
+from src.memory import get_past_response, store_response
+
 RESTACK_ENGINE_ADDRESS = os.getenv('RESTACK_ENGINE_ADDRESS')
 RESTACK_TEMPORAL_ADDRESS = os.getenv('RESTACK_TEMPORAL_ADDRESS')
 RESTACK_ENGINE_ID = os.getenv('RESTACK_ENGINE_ID')
@@ -54,6 +57,13 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.post("/run_workflow")
 async def run_workflow(params: UserInput):
+
+    # check memory for past response 
+    past_response = get_past_response(params.user_prompt, params.test_conditions)
+    
+    if past_response:
+        return {"workflow_id": past_response["workflow_id"], "result": past_response}
+
     connection_options = CloudConnectionOptions(
     engine_id=RESTACK_ENGINE_ID,
     api_key=RESTACK_ENGINE_API_KEY,
@@ -71,6 +81,13 @@ async def run_workflow(params: UserInput):
             input=params.dict()
         )
         result = await client.get_workflow_result(workflow_id=workflow_id, run_id=runId)
+
+        # store response in memory for future use
+        store_response(
+            params.user_prompt, params.test_conditions,
+            result["dockerfile"], result["files"], workflow_id
+        )
+
         return {"workflow_id": workflow_id, "result": result}
     except Exception as e:
         # If engine connection or workflow run fails, a 500 error is raised

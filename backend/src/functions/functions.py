@@ -13,7 +13,7 @@ from typing import List, Optional
 
 from src.prompts import current_generate_code_prompt, current_validate_output_prompt
 
-openai.api_key = os.environ.get("OPENAI_KEY")
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 # Use the OpenAI Python SDK's structured output parsing
 from openai import OpenAI

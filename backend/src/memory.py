@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 
-MEMORY_FILE = "./backend/memory.json"
+MEMORY_FILE = "./memory.json"
 
 if not os.path.exists(MEMORY_FILE):
     with open(MEMORY_FILE, "w") as f:

@@ -5,7 +5,7 @@ git clone https://github.com/hem9984/Azlon-demo.git
 cd Azlon-demo
 ```
 ```
-echo "OPENAI_KEY=sk-..." > .env
+echo "OPENAI_API_KEY=sk-..." > .env
 ```
 ```
 docker compose up
@@ -42,9 +42,9 @@ cd Azlon-demo
 2. Environment Variables: Create a .env file in the project root. Add your OpenAI key:
 bash
 ```
-echo "OPENAI_KEY=sk-..." > .env
+echo "OPENAI_API_KEY=sk-..." > .env
 ```
-* Ensure this .env file contains OPENAI_KEY.
+* Ensure this .env file contains OPENAI_API_KEY.
 
 ## Build & Run the Full Stack with Docker Compose: 
 

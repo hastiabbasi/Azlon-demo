@@ -13,6 +13,8 @@ from typing import List, Optional
 
 from src.prompts import current_generate_code_prompt, current_validate_output_prompt
 
+from src.memory import append_to_memory 
+
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 # Use the OpenAI Python SDK's structured output parsing
@@ -143,6 +145,16 @@ async def generate_code(input: GenerateCodeInput) -> GenerateCodeOutput:
 
     files_list = [{"filename": f.filename, "content": f.content} for f in data.files]
 
+    # Save user prompt, test conditions, and output to memory
+    append_to_memory({
+        "user_prompt": input.user_prompt,
+        "test_conditions": input.test_conditions,
+        "generated_code": {
+            "dockerfile": data.dockerfile,
+            "files": files_list
+        }
+    })
+
     return GenerateCodeOutput(dockerfile=data.dockerfile, files=files_list)
 
 
@@ -236,5 +248,14 @@ async def validate_output(input: ValidateOutputInput) -> ValidateOutputOutput:
 
     data = result.parsed
     updated_files = [{"filename": f.filename, "content": f.content} for f in data.files] if data.files is not None else None
+
+    # Save validation attempt to memory
+    append_to_memory({
+        "test_conditions": input.test_conditions,
+        "dockerfile": input.dockerfile,
+        "files": input.files,
+        "output": input.output,
+        "validation_result": data.result
+    })
 
     return ValidateOutputOutput(result=data.result, dockerfile=data.dockerfile, files=updated_files)

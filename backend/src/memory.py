@@ -1,3 +1,61 @@
+# ./backend/src/memory.py
+import os
+import json
+
+# Path to the memory file
+# memory_file_path = os.path.join(os.path.dirname(__file__), "memory.json")
+memory_file_path = "/app/src/memory.json"
+
+
+# Ensure the memory file exists
+if not os.path.exists(memory_file_path):
+    with open(memory_file_path, "w") as f:
+        json.dump([], f)
+
+def load_memory():
+    with open(memory_file_path, "r") as f:
+        return json.load(f)
+
+def save_memory(memory):
+    with open(memory_file_path, "w") as f:
+        json.dump(memory, f, indent=2)
+
+def append_to_memory(entry):
+    print("append_to_memory called!")
+    memory = load_memory()
+    memory.append(entry)
+    save_memory(memory)
+
+    try:
+        with open(memory_file_path, "w") as f:
+            json.dump(memory, f, indent=2)
+        print("✅ memory.json written successfully.")
+    except Exception as e:
+        print(f"❌ Error writing memory.json: {e}")
+
+
+def store_response(user_prompt, test_conditions, dockerfile, files, workflow_id):
+    entry = {
+        "user_prompt": user_prompt,
+        "test_conditions": test_conditions,
+        "dockerfile": dockerfile,
+        "files": files,
+        "workflow_id": workflow_id
+    }
+    append_to_memory(entry)
+
+def get_past_response(user_prompt, test_conditions):
+    memory = load_memory()
+    for entry in memory:
+        if (
+            entry["user_prompt"] == user_prompt
+            and entry["test_conditions"] == test_conditions
+        ):
+            return entry
+    return None
+
+
+'''
 import json
 import os
 
@@ -36,6 +94,9 @@ def load_memory():
     initialize_memory()
     with open(MEMORY_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
+'''
+
+############
 
 '''
 import json
@@ -76,4 +137,21 @@ def store_response(user_prompt, test_conditions, dockerfile, files, workflow_id)
     })
 
     save_memory(memory)
+'''
+
+'''
+if __name__ == "__main__":
+    test_entry = {
+        "user_prompt": "What is 2 + 2?",
+        "test_conditions": "Expect output to be 4",
+        "generated_code": {
+            "dockerfile": "FROM python:3.9",
+            "files": [{"filename": "main.py", "content": "print(2 + 2)"}]
+        }
+    }
+
+    append_to_memory(test_entry)
+
+    print("✅ Test entry written! Current memory content:")
+    print(json.dumps(load_memory(), indent=2))
 '''

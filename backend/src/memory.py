@@ -1,3 +1,62 @@
+import os
+import json
+import io
+
+# Absolute path to the memory file
+memory_file_path = "memory.json"
+
+# Ensure the memory file exists
+if not os.path.exists(memory_file_path):
+    with open(memory_file_path, "w") as f:
+        json.dump([], f)
+
+def load_memory():
+    """Load memory.json as a Python list"""
+    with open(memory_file_path, "r") as f:
+        return json.load(f)
+
+def save_memory(memory):
+    """Write the full memory list to memory.json using BufferedWriter"""
+    try:
+        with open(memory_file_path, "wb") as raw_file:
+            with io.BufferedWriter(raw_file) as buffered_file:
+                json_str = json.dumps(memory, indent=2)
+                buffered_file.write(json_str.encode("utf-8"))
+                buffered_file.flush()
+        print("✅ memory.json written successfully via BufferedWriter.")
+    except Exception as e:
+        print(f"❌ Error writing memory.json: {e}")
+
+def append_to_memory(entry):
+    """Append an entry to memory.json"""
+    print("[append_to_memory] Called")
+    memory = load_memory()
+    memory.append(entry)
+    save_memory(memory)
+
+def store_response(user_prompt, test_conditions, dockerfile, files, workflow_id):
+    """Store a full response in memory"""
+    entry = {
+        "user_prompt": user_prompt,
+        "test_conditions": test_conditions,
+        "dockerfile": dockerfile,
+        "files": files,
+        "workflow_id": workflow_id
+    }
+    append_to_memory(entry)
+
+def get_past_response(user_prompt, test_conditions):
+    """Search memory.json for a matching past response"""
+    memory = load_memory()
+    for entry in memory:
+        if (
+            entry["user_prompt"] == user_prompt
+            and entry["test_conditions"] == test_conditions
+        ):
+            return entry
+    return None
+
+'''
 # ./backend/src/memory.py
 import os
 import json
@@ -5,7 +64,6 @@ import json
 # Path to the memory file
 # memory_file_path = os.path.join(os.path.dirname(__file__), "memory.json")
 memory_file_path = "/app/src/memory.json"
-
 
 # Ensure the memory file exists
 if not os.path.exists(memory_file_path):
@@ -54,6 +112,7 @@ def get_past_response(user_prompt, test_conditions):
             return entry
     return None
 
+'''
 
 '''
 import json

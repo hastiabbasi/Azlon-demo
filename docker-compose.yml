@@ -37,6 +37,7 @@ services:
       - restack-network
     volumes:
       - ./llm-output:/app/output:rw
+      - ./memory/memory.json:/app/src/memory.json:rw 
     ports:
       - "8000:8000"
 
@@ -59,6 +60,7 @@ services:
       - restack-network
     volumes:
       - ./llm-output:/app/output:rw
+      - ./memory/memory.json:/app/src/memory.json:rw
 
   frontend:
     build: ./frontend

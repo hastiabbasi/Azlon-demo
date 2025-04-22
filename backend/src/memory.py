@@ -1,8 +1,8 @@
 import os
 import json
 
-# Dynamic or fallback path to memory.json
-memory_file_path = os.environ.get("MEMORY_FILE_PATH", "/backend/memory.json")
+# Always resolve the memory file relative to this file's location
+memory_file_path = os.path.join(os.path.dirname(__file__), "memory.json")
 
 # Ensure the memory file exists
 if not os.path.exists(memory_file_path):
